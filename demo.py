@@ -17,8 +17,8 @@ extractor = SuperPoint(max_num_keypoints=2048).eval().to(device)  # load the ext
 matcher = LightGlue(features='superpoint').eval().to(device)
 
 
-image0 = load_image(images / 'DSC_0411.JPG')
-image1 = load_image(images / 'DSC_0410.JPG')
+image0 = load_image(images / '1.JPG')
+image1 = load_image(images / '2.JPG')
 
 feats0 = extractor.extract(image0.to(device))
 feats1 = extractor.extract(image1.to(device))
@@ -28,7 +28,7 @@ feats0, feats1, matches01 = [rbd(x) for x in [feats0, feats1, matches01]]  # rem
 kpts0, kpts1, matches = feats0['keypoints'], feats1['keypoints'], matches01['matches']
 m_kpts0, m_kpts1 = kpts0[matches[..., 0]], kpts1[matches[..., 1]]
 
-filtered_m_kpts0, filtered_m_kpts1 = viz2d.filter_points_by_distance(m_kpts0, m_kpts1, 30)
+filtered_m_kpts0, filtered_m_kpts1 = viz2d.filter_points_by_distance(m_kpts0, m_kpts1, 0)
 print(filtered_m_kpts0 - filtered_m_kpts1)
 
 
