@@ -40,7 +40,8 @@ def cm_prune(x_):
     return cm_BlRdGn(norm_x)
 
 
-def plot_images(imgs, titles=None, cmaps='gray', dpi=100, pad=.5,adaptive=True):
+def plot_images(imgs, delay_time=0, titles=None, cmaps='gray', dpi=100, pad=.5,
+                adaptive=True):
     """Plot a set of images horizontally.
     Args:
         imgs: list of NumPy RGB (H, W, 3) or PyTorch RGB (3, H, W) or mono (H, W).
@@ -66,17 +67,28 @@ def plot_images(imgs, titles=None, cmaps='gray', dpi=100, pad=.5,adaptive=True):
         1, n, figsize=figsize, dpi=dpi, gridspec_kw={'width_ratios': ratios})
     if n == 1:
         ax = [ax]
+    count = 0
+    count2 = 0
     for i in range(n):
+        time.sleep(delay_time)
+        count = count + 1
+        print("count: " + str(count))
         ax[i].imshow(imgs[i], cmap=plt.get_cmap(cmaps[i]))
         ax[i].get_yaxis().set_ticks([])
         ax[i].get_xaxis().set_ticks([])
         ax[i].set_axis_off()
         
         for spine in ax[i].spines.values():  # remove frame
+            time.sleep(delay_time)
+            count2 = count2 + 1
+            print("count2: " + str(count2))
             spine.set_visible(False)
         if titles:
             ax[i].set_title(titles[i])
+    print("x")
     fig.tight_layout(pad=pad)
+    plt.show()
+    time.sleep(5)
 
 
 def plot_keypoints(kpts, colors='lime', ps=4, axes=None, a=1.0):
@@ -160,35 +172,3 @@ def add_text(idx, text, pos=(0.01, 0.99), fs=15, color='w',
 def save_plot(path, **kw):
     """Save the current figure without any white margin."""
     plt.savefig(path, bbox_inches='tight', pad_inches=0, **kw)
-
-def destroy_plot():
-    plt.clf()
-    plt.close()
-
-def show_plt():
-    plt.show()
-
-def filter_points_by_distance(tensor1, tensor2, threshold):
-    """
-    Remove rows from tensor1 and tensor2 where the Euclidean distance between corresponding points is less than or equal to the threshold.
-    
-    Args:
-    - tensor1 (torch.Tensor): N x 2 tensor representing coordinates of points.
-    - tensor2 (torch.Tensor): N x 2 tensor representing coordinates of points.
-    - threshold (float): The distance threshold.
-    
-    Returns:
-    - filtered_tensor1 (torch.Tensor): Filtered N x 2 tensor.
-    - filtered_tensor2 (torch.Tensor): Filtered N x 2 tensor.
-    """
-    # Calculate the Euclidean distance between corresponding rows of tensor1 and tensor2
-    distances = torch.sqrt(torch.sum((tensor1 - tensor2) ** 2, dim=1))
-    
-    # Find the indices where the distance is greater than the threshold
-    indices = torch.where(distances > threshold)[0]
-    
-    # Filter the rows based on these indices
-    filtered_tensor1 = tensor1[indices]
-    filtered_tensor2 = tensor2[indices]
-    
-    return filtered_tensor1, filtered_tensor2
