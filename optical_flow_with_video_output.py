@@ -21,7 +21,7 @@ def draw_flow(img, points, flow, color=(0, 255, 0)):
         img = cv2.circle(img, end, 5, color, -1)
     return img
 
-def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, end_frame, output_csv_path, threshold=0):
+def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, end_frame, output_csv_path, threshold=0, frame_interval=1):
     cap = cv2.VideoCapture(video_path)
     frame_rate = cap.get(cv2.CAP_PROP_FPS)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -38,9 +38,19 @@ def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, e
     
     # Initialize a list to store total_movement for each frame
     total_movements = []
+    count = -1
+    average_movement = 0
 
     while True:
-        ret, frame = cap.read()
+        count += 1
+        if count % frame_interval == 0:
+            ret, frame = cap.read()
+            count = 0
+        else:
+            cap.read()
+        
+        # for i in range(frame_interval):
+        #     ret, frame = cap.read()
         if not ret or cap.get(cv2.CAP_PROP_POS_FRAMES) > end_frame:
             break
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -59,9 +69,10 @@ def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, e
             magnitudes = np.linalg.norm(flow, axis=2).squeeze()
             significant_movements = magnitudes[magnitudes >= threshold]
             total_movement = np.sum(significant_movements)
-            total_movement = total_movement / len(significant_movements)
+            if count % frame_interval == 0:
+                average_movement = total_movement / len(significant_movements)
             # Append the total movement for this frame to the list
-            total_movements.append(total_movement)
+            total_movements.append(average_movement)
 
             vis_frame = draw_flow(frame.copy(), p0, flow)
             out.write(vis_frame)
@@ -160,4 +171,4 @@ if __name__ == "__main__":
     current_time = datetime.datetime.now()
     # 日時を文字列に変換してファイル名を作成
     file_name = current_time.strftime('%Y-%m-%d_%H-%M-%S.csv')
-    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, file_name, 0)
+    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, file_name, threshold=0, frame_interval=10)
