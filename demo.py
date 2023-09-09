@@ -28,7 +28,7 @@ feats0, feats1, matches01 = [rbd(x) for x in [feats0, feats1, matches01]]  # rem
 kpts0, kpts1, matches = feats0['keypoints'], feats1['keypoints'], matches01['matches']
 m_kpts0, m_kpts1 = kpts0[matches[..., 0]], kpts1[matches[..., 1]]
 
-filtered_m_kpts0, filtered_m_kpts1 = viz2d.filter_points_by_distance(m_kpts0, m_kpts1, 0)
+filtered_m_kpts0, filtered_m_kpts1 = viz2d.filter_points_by_distance(m_kpts0, m_kpts1, 5)
 print(filtered_m_kpts0 - filtered_m_kpts1)
 
 

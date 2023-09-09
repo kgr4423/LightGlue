@@ -183,6 +183,8 @@ def filter_points_by_distance(tensor1, tensor2, threshold):
     """
     # Calculate the Euclidean distance between corresponding rows of tensor1 and tensor2
     distances = torch.sqrt(torch.sum((tensor1 - tensor2) ** 2, dim=1))
+    print("distances")
+    print(distances)
     
     # Find the indices where the distance is greater than the threshold
     indices = torch.where(distances > threshold)[0]
