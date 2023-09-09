@@ -130,7 +130,7 @@ def save_frame_as_image(video_path, frame_number, output_dir='./', output_name=N
 if __name__ == "__main__":
 
     # 使用例
-    video_path = 'assets/optical_flow_test3.mp4'
+    video_path = 'assets/optical_flow_test2.mp4'
     firts_frame = save_frame_as_image(video_path, frame_number=1, output_dir="assets/", output_name="first.png")
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 'mps', 'cpu'
@@ -146,7 +146,6 @@ if __name__ == "__main__":
     feats0, feats1, matches01 = [rbd(x) for x in [feats0, feats1, matches01]]  # remove batch dimension
     kpts0, kpts1, matches = feats0['keypoints'], feats1['keypoints'], matches01['matches']
 
-    # points_tensor = torch.tensor([[100, 100], [150, 150], [200, 200]])
     start_frame = 1
     end_frame = 1000
 
