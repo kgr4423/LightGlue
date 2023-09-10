@@ -8,3 +8,7 @@ __pycache__
 lightglue/_flash/
 *-checkpoint.ipynb
 *.pth
+*.csv
+*.avi
+*.mp4
+*.png

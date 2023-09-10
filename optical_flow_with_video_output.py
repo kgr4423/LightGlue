@@ -31,7 +31,7 @@ def draw_flow(img, points, flow, color=(0, 255, 0)):
         img = cv2.circle(img, end, 5, color, -1)
     return img
 
-def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, end_frame, output_csv_path, threshold=0, frame_interval=1):
+def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, end_frame, output_csv_path, output_video_name, threshold=0, frame_interval=1):
     """
     指定した動画における指定した点のオプティカルフローを計算する関数
     
@@ -47,7 +47,7 @@ def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, e
     cap = cv2.VideoCapture(video_path)
     frame_rate = cap.get(cv2.CAP_PROP_FPS)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('output_optical_flow.avi', fourcc, frame_rate, (int(cap.get(3)), int(cap.get(4))))
+    out = cv2.VideoWriter(output_video_name, fourcc, frame_rate, (int(cap.get(3)), int(cap.get(4))))
 
     # 指定したフレームに移動
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
@@ -158,7 +158,7 @@ def save_frame_as_image(video_path, frame_number, output_dir='./', output_name=N
     cap.release()
     return output_path
 
-def plot(plot_csv_name):
+def plot(plot_csv_name, output_chart_name):
     # ここからグラフ描画-------------------------------------
     data = np.loadtxt(plot_csv_name, usecols=(0, 1), delimiter=',',skiprows=1,  encoding="utf-8_sig")
     time = data[:, 0]
@@ -175,7 +175,7 @@ def plot(plot_csv_name):
     plt.xlabel('Time [s]')
     plt.ylabel('average_movements')
     # スケールの設定をする。
-    plt.xlim(0, 10)
+    plt.xlim(0, max(time))
     plt.ylim(0, max(average_movements))
     # データプロットの準備とともに、ラベルと線の太さ、凡例の設置を行う。
     plt.plot(time, average_movements, label='Time waveform', lw=1, color='red')
@@ -183,7 +183,6 @@ def plot(plot_csv_name):
     plt.tight_layout()
 
     # グラフを保存する
-    output_chart_name = "flow_charts/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.png')
     plt.savefig(output_chart_name)
     plt.close()
     # ---------------------------------------------------
@@ -191,29 +190,33 @@ def plot(plot_csv_name):
 if __name__ == "__main__":
 
     # オプティカルフローを計算する動画ファイルの指定
-    video_path = 'assets/optical_flow_test4.mp4'
+    video_path = 'assets/optical_flow_test5.mp4'
     start_frame = 1
     end_frame = 1000
     
     # 特徴点抽出を行うフレームの指定
     firts_frame = save_frame_as_image(video_path, frame_number=1, output_dir="assets/", output_name="frame_first.png")
+    second_frame = save_frame_as_image(video_path, frame_number=2, output_dir="assets/", output_name="frame_second.png")
     # 特徴点抽出
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 'mps', 'cpu'
     matcher = LightGlue(features='superpoint').eval().to(device)
     extractor = SuperPoint(max_num_keypoints=2048).eval().to(device)   
     image0 = load_image(firts_frame) 
-    image1 = load_image(firts_frame)
+    image1 = load_image(second_frame)
     feats0 = extractor.extract(image0.to(device))
     feats1 = extractor.extract(image1.to(device))
     matches01 = matcher({'image0': feats0, 'image1': feats1})
     feats0, feats1, matches01 = [rbd(x) for x in [feats0, feats1, matches01]]  # remove batch dimension
     kpts0, kpts1, matches = feats0['keypoints'], feats1['keypoints'], matches01['matches']
+    m_kpts0, m_kpts1 = kpts0[matches[..., 0]], kpts1[matches[..., 1]]
 
     # オプティカルフローの計算と描画
     current_time = datetime.datetime.now()
     output_csv_name = "flow_csv/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.csv')
-    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, output_csv_name, threshold=0, frame_interval=10)
+    output_video_name = "flow_video/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.avi')
+    output_chart_name = "flow_charts/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.png')
+    compute_and_visualize_optical_flow(video_path, m_kpts0, start_frame, end_frame, output_csv_name,output_video_name, threshold=0, frame_interval=1)
 
-    plot(output_csv_name)
+    plot(output_csv_name, output_chart_name)
 
     

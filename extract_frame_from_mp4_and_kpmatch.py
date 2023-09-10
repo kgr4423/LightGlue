@@ -51,7 +51,7 @@ def integrate(input_file, start_frame, end_frame, frame_interval, output_directo
         # フレームの時間を取得
         frame_time = current_frame / cap.get(cv2.CAP_PROP_FPS)
         # 画像の保存
-        output_file = os.path.join(output_directory, f"{frame_time:.2f}.png")
+        output_file = os.path.join(output_directory, f"{frame_time:07.2f}.png")
         cv2.imwrite(output_file, frame)
 
         frame_count += 1
@@ -117,7 +117,7 @@ def integrate(input_file, start_frame, end_frame, frame_interval, output_directo
             writer = csv.writer(csvfile)
             writer.writerow(["Frame", "Total Movement"])
             for i, movement in enumerate(total_movements):
-                writer.writerow([i, movement])
+                writer.writerow([i*frame_interval/frame_rate, movement])
 
 def plot(plot_csv_name, output_chart_name):
     # ここからグラフ描画-------------------------------------
@@ -136,7 +136,7 @@ def plot(plot_csv_name, output_chart_name):
     plt.xlabel('Time [s]')
     plt.ylabel('average_movements')
     # スケールの設定をする。
-    plt.xlim(0, 10)
+    plt.xlim(0, max(time))
     plt.ylim(0, max(average_movements))
     # データプロットの準備とともに、ラベルと線の太さ、凡例の設置を行う。
     plt.plot(time, average_movements, label='Time waveform', lw=1, color='red')
@@ -150,9 +150,9 @@ def plot(plot_csv_name, output_chart_name):
 
 
 if __name__ == "__main__":
-    input_file = 'assets/optical_flow_test4.mp4'
+    input_file = 'assets/optical_flow_test5.mp4'
     start_frame = 0
-    end_frame = 1000
+    end_frame = 100
     frame_interval = 10
     current_time = datetime.datetime.now()
     output_directory = 'kpmatch_frames/' + current_time.strftime('%Y-%m-%d_%H-%M-%S')
@@ -160,6 +160,6 @@ if __name__ == "__main__":
     output_video_name = "kpmatch_video/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.avi')
     output_chart_name = "kpmatch_charts/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.png') 
 
-    integrate(input_file, start_frame, end_frame, frame_interval, output_directory, output_csv_name,output_video_name, threshold=3)
+    integrate(input_file, start_frame, end_frame, frame_interval, output_directory, output_csv_name,output_video_name, threshold=0)
 
     plot(output_csv_name, output_chart_name)
