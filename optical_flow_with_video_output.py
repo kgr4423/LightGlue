@@ -158,34 +158,9 @@ def save_frame_as_image(video_path, frame_number, output_dir='./', output_name=N
     cap.release()
     return output_path
 
-if __name__ == "__main__":
-
-    # オプティカルフローを計算する動画ファイルの指定
-    video_path = 'assets/optical_flow_test4.mp4'
-    start_frame = 1
-    end_frame = 1000
-    
-    # 特徴点抽出を行うフレームの指定
-    firts_frame = save_frame_as_image(video_path, frame_number=1, output_dir="assets/", output_name="frame_first.png")
-    # 特徴点抽出
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 'mps', 'cpu'
-    matcher = LightGlue(features='superpoint').eval().to(device)
-    extractor = SuperPoint(max_num_keypoints=2048).eval().to(device)   
-    image0 = load_image(firts_frame) 
-    image1 = load_image(firts_frame)
-    feats0 = extractor.extract(image0.to(device))
-    feats1 = extractor.extract(image1.to(device))
-    matches01 = matcher({'image0': feats0, 'image1': feats1})
-    feats0, feats1, matches01 = [rbd(x) for x in [feats0, feats1, matches01]]  # remove batch dimension
-    kpts0, kpts1, matches = feats0['keypoints'], feats1['keypoints'], matches01['matches']
-
-    # オプティカルフローの計算と描画
-    current_time = datetime.datetime.now()
-    output_csv_name = "flow_csv/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.csv')
-    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, output_csv_name, threshold=5, frame_interval=1)
-
+def plot(plot_csv_name):
     # ここからグラフ描画-------------------------------------
-    data = np.loadtxt(output_csv_name, usecols=(0, 1), delimiter=',',skiprows=1,  encoding="utf-8_sig")
+    data = np.loadtxt(plot_csv_name, usecols=(0, 1), delimiter=',',skiprows=1,  encoding="utf-8_sig")
     time = data[:, 0]
     average_movements = data[:, 1]
     # フォントの種類とサイズを設定する。
@@ -212,3 +187,33 @@ if __name__ == "__main__":
     plt.savefig(output_chart_name)
     plt.close()
     # ---------------------------------------------------
+
+if __name__ == "__main__":
+
+    # オプティカルフローを計算する動画ファイルの指定
+    video_path = 'assets/optical_flow_test4.mp4'
+    start_frame = 1
+    end_frame = 1000
+    
+    # 特徴点抽出を行うフレームの指定
+    firts_frame = save_frame_as_image(video_path, frame_number=1, output_dir="assets/", output_name="frame_first.png")
+    # 特徴点抽出
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 'mps', 'cpu'
+    matcher = LightGlue(features='superpoint').eval().to(device)
+    extractor = SuperPoint(max_num_keypoints=2048).eval().to(device)   
+    image0 = load_image(firts_frame) 
+    image1 = load_image(firts_frame)
+    feats0 = extractor.extract(image0.to(device))
+    feats1 = extractor.extract(image1.to(device))
+    matches01 = matcher({'image0': feats0, 'image1': feats1})
+    feats0, feats1, matches01 = [rbd(x) for x in [feats0, feats1, matches01]]  # remove batch dimension
+    kpts0, kpts1, matches = feats0['keypoints'], feats1['keypoints'], matches01['matches']
+
+    # オプティカルフローの計算と描画
+    current_time = datetime.datetime.now()
+    output_csv_name = "flow_csv/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.csv')
+    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, output_csv_name, threshold=0, frame_interval=10)
+
+    plot(output_csv_name)
+
+    
