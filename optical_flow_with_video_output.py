@@ -4,7 +4,8 @@ import torch
 from pathlib import Path
 import math
 import datetime
-    
+import matplotlib.pyplot as plt
+
 from lightglue import LightGlue, SuperPoint, DISK
 from lightglue.utils import load_image, rbd
 from lightglue import viz2d
@@ -90,7 +91,7 @@ def compute_and_visualize_optical_flow(video_path, points_tensor, start_frame, e
             significant_movements = magnitudes[magnitudes >= threshold] #移動量が閾値以上のものを抽出
             total_movement = np.sum(significant_movements) #そのフレームでの移動量の総和計算
             if interval_count % frame_interval == 0:
-                average_movement = total_movement / len(significant_movements) #移動量の平均計算
+                average_movement = total_movement / len(magnitudes) #移動量の平均計算
             total_movements.append(average_movement)
             # オプティカルフローの視覚化
             vis_frame = draw_flow(frame.copy(), p0, flow)
@@ -160,12 +161,12 @@ def save_frame_as_image(video_path, frame_number, output_dir='./', output_name=N
 if __name__ == "__main__":
 
     # オプティカルフローを計算する動画ファイルの指定
-    video_path = 'assets/optical_flow_test.mp4'
+    video_path = 'assets/optical_flow_test4.mp4'
     start_frame = 1
     end_frame = 1000
     
     # 特徴点抽出を行うフレームの指定
-    firts_frame = save_frame_as_image(video_path, frame_number=1, output_dir="assets/", output_name="first.png")
+    firts_frame = save_frame_as_image(video_path, frame_number=1, output_dir="assets/", output_name="frame_first.png")
     # 特徴点抽出
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 'mps', 'cpu'
     matcher = LightGlue(features='superpoint').eval().to(device)
@@ -180,5 +181,34 @@ if __name__ == "__main__":
 
     # オプティカルフローの計算と描画
     current_time = datetime.datetime.now()
-    file_name = current_time.strftime('%Y-%m-%d_%H-%M-%S.csv')
-    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, file_name, threshold=0, frame_interval=10)
+    output_csv_name = "flow_csv/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.csv')
+    compute_and_visualize_optical_flow(video_path, kpts0, start_frame, end_frame, output_csv_name, threshold=5, frame_interval=1)
+
+    # ここからグラフ描画-------------------------------------
+    data = np.loadtxt(output_csv_name, usecols=(0, 1), delimiter=',',skiprows=1,  encoding="utf-8_sig")
+    time = data[:, 0]
+    average_movements = data[:, 1]
+    # フォントの種類とサイズを設定する。
+    plt.rcParams['font.size'] = 14
+    plt.rcParams['font.family'] = 'Times New Roman'
+    # 目盛を内側にする。
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    # グラフの上下左右に目盛線を付ける。
+    # fig = plt.figure()
+    # 軸のラベルを設定する。
+    plt.xlabel('Time [s]')
+    plt.ylabel('average_movements')
+    # スケールの設定をする。
+    plt.xlim(0, 10)
+    plt.ylim(0, max(average_movements))
+    # データプロットの準備とともに、ラベルと線の太さ、凡例の設置を行う。
+    plt.plot(time, average_movements, label='Time waveform', lw=1, color='red')
+    # レイアウト設定
+    plt.tight_layout()
+
+    # グラフを保存する
+    output_chart_name = "flow_charts/" + current_time.strftime('%Y-%m-%d_%H-%M-%S.png')
+    plt.savefig(output_chart_name)
+    plt.close()
+    # ---------------------------------------------------
