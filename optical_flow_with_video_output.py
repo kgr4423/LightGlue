@@ -2,13 +2,13 @@ import cv2
 import numpy as np
 import torch
 from pathlib import Path
-    
-from lightglue import LightGlue, SuperPoint, DISK
-# import SuperPoint, DISK
-from lightglue.utils import load_image, rbd
-from lightglue import viz2d
 import math
 import datetime
+    
+from lightglue import LightGlue, SuperPoint, DISK
+from lightglue.utils import load_image, rbd
+from lightglue import viz2d
+
 torch.set_grad_enabled(False)
 images = Path('assets')
 
